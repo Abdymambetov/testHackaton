@@ -1,38 +1,38 @@
-.App {
-  text-align: center;
+/* Adjust the container to match the width of the input field */
+.password-strength-container {
+  width: 100px; /* Same width as the input field */
+  margin-top: 5px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Adjust the strength bar to be inside the container */
+.strength-percent {
+  width: 100%;
+  height: 5px; /* Small line for the gradient */
+  border-radius: 10px;
+  background: #eee;
+  position: relative;
+  overflow: hidden;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.strength-percent span {
+  display: block;
+  height: 100%;
+  transition: all 0.4s;
+  border-radius: 10px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* Colors for different strength levels */
+.weak {
+  background: red;
+  width: 33%;
 }
 
-.App-link {
-  color: #61dafb;
+.average {
+  background: #ffd000;
+  width: 66%;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.strong {
+  background: green;
+  width: 100%;
 }
