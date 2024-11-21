@@ -1,106 +1,45 @@
-// import React, { useEffect, useState } from 'react';
-// import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-// import L from 'leaflet';
-// import 'leaflet/dist/leaflet.css';
-// // import { fetchParkingSpots } from '../services/api';
-
-// // Исправление проблемы с иконкой по умолчанию в Leaflet
-// delete L.Icon.Default.prototype._getIconUrl;
-
-// L.Icon.Default.mergeOptions({
-//   iconRetinaUrl:
-//     'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-//   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-//   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-// });
-
-// const MapComponent = () => {
-//   const [parkingSpots, setParkingSpots] = useState([]);
-
-// //   useEffect(() => {
-// //     const loadParkingSpots = async () => {
-// //       try {
-// //         const response = await fetchParkingSpots();
-// //         setParkingSpots(response.data);
-// //       } catch (error) {
-// //         console.error('Failed to fetch parking spots:', error);
-// //       }
-// //     };
-
-// //     loadParkingSpots();
-// //   }, []);
-
-//   return (
-//     <MapContainer
-//     //   center={[42.8746, 74.5698]} // Центр карты - Бишкек
-//       center={[42.8765, 74.5903]} // Центр карты - Бишкек
-//       zoom={13}
-//       style={{ height: '100vh', width: '100%' }}
-//     >
-//       <TileLayer
-//         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-//         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-//       />
-//       {parkingSpots.map((spot) => (
-//         <Marker
-//           key={spot.id}
-//           position={[spot.latitude, spot.longitude]}
-//         >
-//           <Popup>
-//             <h3>{spot.location}</h3>
-//             <p>{spot.is_available ? 'Available' : 'Occupied'}</p>
-//           </Popup>
-//         </Marker>
-//       ))}
-//     </MapContainer>
-//   );
-// };
-
-// export default MapComponent;
-
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-// import { fetchParkingSpots } from '../services/api';
 
-// Исправление проблемы с иконкой по умолчанию в Leaflet
+// Fix for default icon issue
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Создаем зеленую и красную иконки для парковок
+// Custom Icons for parking
 const greenIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-green.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-green-2x.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl: 'https://img.icons8.com/ios/50/000000/parking.png', // Green parking icon
+  iconRetinaUrl: 'https://img.icons8.com/ios/100/000000/parking.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
 
 const redIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red-2x.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl: 'https://img.icons8.com/ios/50/000000/empty-parking.png', // Red parking icon for full spots
+  iconRetinaUrl: 'https://img.icons8.com/ios/100/000000/empty-parking.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
 
-// Создаем кастомную иконку для местоположения пользователя
+// Custom icon for user location
 const userLocationIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-blue.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-blue-2x.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl: 'https://img.icons8.com/ios/50/000000/user-location.png',
+  iconRetinaUrl: 'https://img.icons8.com/ios/100/000000/user-location.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
 
-// Компонент для центрирования карты на местоположении пользователя
+// Center map component
 const CenterMapOnLocation = ({ location }) => {
   const map = useMap();
   useEffect(() => {
@@ -112,78 +51,121 @@ const CenterMapOnLocation = ({ location }) => {
   return null;
 };
 
+// Function to determine the color of the occupancy indicator
+const getOccupancyStatus = (availableSpaces, totalSpaces) => {
+  const occupancyRate = availableSpaces / totalSpaces;
+  if (occupancyRate > 0.5) {
+    return 'green'; // Low occupancy
+  } else if (occupancyRate > 0.2) {
+    return 'yellow'; // Medium occupancy
+  } else {
+    return 'red'; // High occupancy
+  }
+};
+
 const MapComponent = () => {
-  const [parkingSpots, setParkingSpots] = useState([]);
+  // Parking spot data with total spaces and available spaces
+  const parkingData = [
+    {
+      id: 1,
+      location: 'Центр города, Ул. Киевская',
+      latitude: 42.8765,
+      longitude: 74.5987,
+      totalSpaces: 30,
+      availableSpaces: 10,
+      isReserved: false, // Whether the spot is reserved
+    },
+    {
+      id: 2,
+      location: 'ТЦ "Бишкек Парк"',
+      latitude: 42.8715,
+      longitude: 74.6037,
+      totalSpaces: 30,
+      availableSpaces: 0,
+      isReserved: false,
+    },
+    {
+      id: 3,
+      location: 'Спорткомплекс "Дордой Плаза"',
+      latitude: 42.8821,
+      longitude: 74.5832,
+      totalSpaces: 30,
+      availableSpaces: 5,
+      isReserved: false,
+    },
+    {
+      id: 4,
+      location: 'ТЦ "Вефа Центр"',
+      latitude: 42.8598,
+      longitude: 74.6102,
+      totalSpaces: 30,
+      availableSpaces: 0,
+      isReserved: false,
+    },
+    {
+      id: 5,
+      location: 'Площадь Ала-Тоо',
+      latitude: 42.8741,
+      longitude: 74.6094,
+      totalSpaces: 30,
+      availableSpaces: 15,
+      isReserved: false,
+    },
+  ];
+
+  // State for parking spots and user location
+  const [parkingSpots, setParkingSpots] = useState(parkingData);
   const [userLocation, setUserLocation] = useState(null);
 
-  // Функция для получения координат пользователя
+  // Fetch user location using Geolocation API
   useEffect(() => {
     const fetchUserLocation = () => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              console.log('User location:', position.coords.latitude, position.coords.longitude);
-              setUserLocation({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-              });
-            },
-            (error) => {
-              // Улучшенная обработка ошибок
-              switch (error.code) {
-                case error.PERMISSION_DENIED:
-                  console.error('User denied the request for Geolocation.');
-                  alert('Please allow access to your location in your browser settings.');
-                  break;
-                case error.POSITION_UNAVAILABLE:
-                  console.error('Location information is unavailable.');
-                  alert('Unable to retrieve location information. Please try again.');
-                  break;
-                case error.TIMEOUT:
-                  console.error('The request to get user location timed out.');
-                  alert('The request for your location timed out. Please try again.');
-                  break;
-                case error.UNKNOWN_ERROR:
-                  console.error('An unknown error occurred.');
-                  alert('An unknown error occurred while trying to get your location.');
-                  break;
-                default:
-                  console.error('Error fetching geolocation:', error);
-              }
-            },
-            {
-              enableHighAccuracy: true, // Использовать более точное местоположение
-              timeout: 10000,           // Максимальное время ожидания (10 секунд)
-              maximumAge: 0,            // Не использовать кэшированное местоположение
-            }
-          );
-        } else {
-          console.error('Geolocation is not supported by this browser.');
-          alert('Geolocation is not supported by your browser.');
-        }
-      };
-      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            });
+          },
+          (error) => {
+            console.error('Geolocation Error:', error);
+            alert('Unable to fetch user location.');
+          }
+        );
+      }
+    };
 
     fetchUserLocation();
   }, []);
 
-  // Загрузка парковочных мест из API
-//   useEffect(() => {
-//     const loadParkingSpots = async () => {
-//       try {
-//         const response = await fetchParkingSpots();
-//         setParkingSpots(response.data);
-//       } catch (error) {
-//         console.error('Failed to fetch parking spots:', error);
-//       }
-//     };
+  // Function to book a parking spot
+  const reserveSpot = (id) => {
+    setParkingSpots((prevSpots) => {
+      return prevSpots.map((spot) => {
+        if (spot.id === id && !spot.isReserved && spot.availableSpaces > 0) {
+          return { ...spot, isReserved: true, availableSpaces: spot.availableSpaces - 1 }; // Reserve the spot
+        }
+        return spot;
+      });
+    });
+  };
 
-//     loadParkingSpots();
-//   }, []);
+  // Function to release a parking spot
+  const releaseSpot = (id) => {
+    setParkingSpots((prevSpots) => {
+      return prevSpots.map((spot) => {
+        if (spot.id === id && spot.isReserved) {
+          return { ...spot, isReserved: false, availableSpaces: spot.availableSpaces + 1 }; // Release the spot
+        }
+        return spot;
+      });
+    });
+  };
 
   return (
     <MapContainer
-      center={[42.8746, 74.5698]} // Центр карты по умолчанию — Бишкек
+      center={[42.8746, 74.5698]} // Default center for Bishkek
       zoom={13}
       style={{ height: '100vh', width: '100%' }}
     >
@@ -192,34 +174,54 @@ const MapComponent = () => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
 
-      {/* Центрирование карты на местоположении пользователя */}
+      {/* Center the map on user location */}
       {userLocation && <CenterMapOnLocation location={userLocation} />}
 
-      {/* Маркер местоположения пользователя */}
+      {/* User Location Marker */}
       {userLocation && (
         <Marker
           position={[userLocation.latitude, userLocation.longitude]}
           icon={userLocationIcon}
         >
           <Popup>Вы находитесь здесь</Popup>
-          
         </Marker>
-        
       )}
 
-      {/* Маркеры парковочных мест */}
-      {parkingSpots.map((spot) => (
-        <Marker
-          key={spot.id}
-          position={[spot.latitude, spot.longitude]}
-          icon={spot.is_available ? greenIcon : redIcon}
-        >
-          <Popup>
-            <h3>{spot.location}</h3>
-            <p>{spot.is_available ? 'Available' : 'Occupied'}</p>
-          </Popup>
-        </Marker>
-      ))}
+      {/* Parking Spot Markers */}
+      {parkingSpots.map((spot) => {
+        const occupancyStatus = getOccupancyStatus(spot.availableSpaces, spot.totalSpaces);
+        return (
+          <Marker
+            key={spot.id}
+            position={[spot.latitude, spot.longitude]}
+            icon={spot.isReserved ? redIcon : spot.availableSpaces > 0 ? greenIcon : redIcon}
+          >
+            <Popup>
+              <h3>{spot.location}</h3>
+              <p>Свободных мест: {spot.availableSpaces}</p>
+              <p>Всего мест: {spot.totalSpaces}</p>
+              <p>
+                Загруженность:
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: '10px',
+                    height: '10px',
+                    backgroundColor: occupancyStatus,
+                    borderRadius: '50%',
+                    marginLeft: '10px',
+                  }}
+                ></span>
+              </p>
+              {spot.isReserved ? (
+                <button onClick={() => releaseSpot(spot.id)}>Я выехал</button> // Button to release the spot
+              ) : (
+                <button onClick={() => reserveSpot(spot.id)}>Забронировать</button> // Button to reserve the spot
+              )}
+            </Popup>
+          </Marker>
+        );
+      })}
     </MapContainer>
   );
 };
